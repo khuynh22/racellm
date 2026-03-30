@@ -10,26 +10,28 @@ providers:
     # base_url: "https://api.openai.com/v1"  # optional override
     timeout_seconds: 60
     models:
-      - gpt-4o
-      - gpt-4o-mini
+      - gpt-5.4
+      - gpt-5-codex
 
   anthropic:
     enabled: true
     api_key: "$ANTHROPIC_API_KEY"
     timeout_seconds: 60
     models:
-      - claude-sonnet-4-20250514
+      - claude-opus-4-6
+      - claude-sonnet-4-6
 
   gemini:
     enabled: false
     api_key: "$GEMINI_API_KEY"
     timeout_seconds: 60
     models:
-      - gemini-2.0-flash
+      - gemini-3.1-pro-preview
+      - gemini-3-flash-preview
 
   ollama:
     enabled: false
     # base_url: "http://localhost:11434"  # default
     timeout_seconds: 120
     models:
-      - llama3
+      - nemotron-cascade-2
