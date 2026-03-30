@@ -1,0 +1,6 @@
+{
+  "recommendations": [
+    // Go language support — required
+    "golang.go"
+  ]
+}

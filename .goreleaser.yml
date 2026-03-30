@@ -1,0 +1,60 @@
+# GoReleaser configuration — builds cross-platform binaries on tag push.
+# Docs: https://goreleaser.com/customization/
+version: 2
+
+builds:
+  - id: racellm
+    main: .
+    binary: racellm
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ignore:
+      - goos: windows
+        goarch: arm64
+    ldflags:
+      # Embed version from git tag into the binary.
+      - -s -w -X github.com/khang/racellm/cmd.version={{.Version}}
+
+archives:
+  - id: racellm
+    formats:
+      - tar.gz
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^chore:"
+      - "Merge pull request"
+      - "Merge branch"
+
+release:
+  draft: false
+  prerelease: auto   # Tags like v1.0.0-beta are marked as pre-release
+
+brews:
+  - name: racellm
+    skip_upload: true   # Set to false once you have a Homebrew tap repo
+    repository:
+      owner: khang           # Update to your GitHub username
+      name: homebrew-tap
+    description: "Race your LLMs — fire one prompt at multiple AI models simultaneously"
+    homepage: "https://github.com/khang/racellm"
+    license: "MIT"

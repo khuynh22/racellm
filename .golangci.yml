@@ -1,0 +1,93 @@
+# golangci-lint configuration for RaceLLM
+# Docs: https://golangci-lint.run/usage/configuration/
+
+run:
+  timeout: 5m
+  # Check vendor directory if present
+  modules-download-mode: readonly
+
+linters:
+  # Disable all linters, then explicitly enable the ones we want.
+  disable-all: true
+  enable:
+    # --- Correctness ---
+    - errcheck       # Ensure errors are checked
+    - govet          # Vet checks (shadowed vars, printf mismatches, etc.)
+    - staticcheck    # SA/S1/ST checks from staticcheck.io
+    - gosimple       # Suggestions for simplifying code
+    - ineffassign    # Detect unused assignments
+    - unused         # Find unused code (vars, funcs, types)
+
+    # --- Style / Quality ---
+    - gofmt          # Standard Go formatting
+    - goimports      # Keeps import blocks clean
+    - revive         # Opinionated linter (replaces golint)
+    - godot          # Comments should end with a period
+    - misspell       # Common spelling mistakes in comments & strings
+    - whitespace     # Unnecessary blank lines
+
+    # --- Bugs & Security ---
+    - gosec          # Security checks (G-series rules)
+    - bodyclose      # Ensure http.Response.Body is closed
+    - noctx          # Detect http.NewRequest without context
+    - rowserrcheck   # Ensure sql.Rows.Err is checked
+
+    # --- Concurrency ---
+    - gocritic       # A large set of code checks (incl. concurrency)
+
+linters-settings:
+  errcheck:
+    # Treat errors returned from type assertions as errors.
+    check-type-assertions: true
+    check-blank: true
+
+  govet:
+    enable-all: true
+    disable:
+      # Too noisy for a project with named returns.
+      - fieldalignment
+
+  revive:
+    rules:
+      - name: exported
+        arguments:
+          - "checkPrivateReceivers"
+          # sayRepetitiveInsteadOfStutters omitted — ProviderConfig is
+          # intentionally named for clarity as provider.ProviderConfig.
+
+  gosec:
+    excludes:
+      # G107: URL from variable — we allow configurable base URLs by design.
+      - G107
+
+  godot:
+    scope: declarations   # Only check exported declarations' doc comments
+    capital: true
+
+  misspell:
+    locale: US
+
+  gocritic:
+    enabled-tags:
+      - diagnostic
+      - style
+      - performance
+    disabled-checks:
+      # Not useful for a CLI app that exits on error.
+      - exitAfterDefer
+      - hugeParam
+      # unnamedResult is a style preference; named returns add noise here.
+      - unnamedResult
+
+issues:
+  # Show all issues, not just 3 per linter.
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+  exclude-rules:
+    # Test files get relaxed rules.
+    - path: "_test\\.go"
+      linters:
+        - gosec
+        - errcheck
+        - gocritic

@@ -1,0 +1,35 @@
+# RaceLLM Configuration
+# API keys can reference environment variables with $ prefix: "$OPENAI_API_KEY"
+
+default_mode: all # "fastest" = cancel losers, "all" = wait for everyone
+
+providers:
+  openai:
+    enabled: true
+    api_key: "$OPENAI_API_KEY"
+    # base_url: "https://api.openai.com/v1"  # optional override
+    timeout_seconds: 60
+    models:
+      - gpt-4o
+      - gpt-4o-mini
+
+  anthropic:
+    enabled: true
+    api_key: "$ANTHROPIC_API_KEY"
+    timeout_seconds: 60
+    models:
+      - claude-sonnet-4-20250514
+
+  gemini:
+    enabled: false
+    api_key: "$GEMINI_API_KEY"
+    timeout_seconds: 60
+    models:
+      - gemini-2.0-flash
+
+  ollama:
+    enabled: false
+    # base_url: "http://localhost:11434"  # default
+    timeout_seconds: 120
+    models:
+      - llama3
