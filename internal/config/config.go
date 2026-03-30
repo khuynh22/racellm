@@ -1,3 +1,4 @@
+// Package config handles loading and parsing the racellm configuration file.
 package config
 
 import (

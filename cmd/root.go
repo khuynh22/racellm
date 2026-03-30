@@ -1,3 +1,4 @@
+// Package cmd defines the CLI commands for racellm.
 package cmd
 
 import (

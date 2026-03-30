@@ -1,3 +1,4 @@
+// Package race builds the set of provider-model entrants from the loaded configuration.
 package race
 
 import (

@@ -1,3 +1,4 @@
+// Package provider defines the Provider interface and shared types used by all LLM backends.
 package provider
 
 import (

@@ -1,3 +1,4 @@
+// Package coordinator manages the race between multiple LLM providers.
 package coordinator
 
 import (
