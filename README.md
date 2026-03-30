@@ -8,7 +8,7 @@ RaceLLM is a high-concurrency Go CLI that sends your prompt to every configured 
 
 - **Fan-Out Concurrency:** 1 prompt → $N$ goroutines → $N$ API calls simultaneously.
 - **Streaming Aggregation:** Handles multiple incoming SSE token streams without blocking.
-- **Graceful Cancellation:** `context.Context` kills losing connections the instant a winner is declared — saving API costs and CPU.
+- **Graceful Cancellation:** `context.Context` kills losing connections the instant a winner is declared - saving API costs and CPU.
 
 ## Quick Start
 
