@@ -1,0 +1,55 @@
+{
+  // Go toolchain
+  "go.useLanguageServer": true,
+  "go.lintTool": "golangci-lint",
+  "go.lintFlags": ["--fast"],
+  "go.lintOnSave": "package",
+  "go.formatTool": "goimports",
+  "go.vetOnSave": "package",
+
+  // Auto-format on save
+  "[go]": {
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    },
+    "editor.defaultFormatter": "golang.go"
+  },
+  "[go.mod]": {
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "golang.go"
+  },
+
+  // Test settings
+  "go.testFlags": ["-v", "-race"],
+  "go.coverOnSave": false,
+  "go.coverOnTestPackage": true,
+
+  // Gopls (language server) settings
+  "gopls": {
+    "ui.semanticTokens": true,
+    "ui.codelenses": {
+      "gc_details": false,
+      "generate": true,
+      "regenerate_cgo": false,
+      "run_govulncheck": true,
+      "test": true,
+      "tidy": true,
+      "upgrade_dependency": true,
+      "vendor": false
+    },
+    "ui.diagnostic.staticcheck": true,
+    "analyses": {
+      "shadow": true,
+      "unusedparams": true,
+      "unusedwrite": true,
+      "useany": true
+    }
+  },
+
+  // Hide noisy output files from the explorer
+  "files.exclude": {
+    "**/*.exe": true,
+    "**/racellm.exe": true
+  }
+}

@@ -1,0 +1,19 @@
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Build output
+racellm
+dist/
+
+# Local config with real API keys — never commit this
+.racellm.yaml
+racellm.yaml
+
+# Editor / OS
+.DS_Store
+Thumbs.db
