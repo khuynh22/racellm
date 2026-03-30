@@ -7,7 +7,6 @@ providers:
   openai:
     enabled: true
     api_key: "$OPENAI_API_KEY"
-    # base_url: "https://api.openai.com/v1"  # optional override
     timeout_seconds: 60
     models:
       - gpt-5.4
