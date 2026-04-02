@@ -30,20 +30,20 @@ type Entrant struct {
 // RaceEvent is emitted on the event channel to inform the UI of race progress.
 type RaceEvent struct {
 	Type    EventType
-	Token   *provider.Token  // non-nil for EventToken
-	Result  *provider.Result // non-nil for EventFinish
-	Entrant string           // "Provider/Model" label
-	Err     error            // non-nil for EventError
+	Token   *provider.Token
+	Result  *provider.Result
+	Entrant string
+	Err     error
 }
 
 type EventType int
 
 const (
-	EventToken  EventType = iota // A token was received from a racer
-	EventFirst                   // First token from a racer (TTFT winner)
-	EventFinish                  // A racer finished streaming
-	EventError                   // A racer encountered an error
-	EventWinner                  // Fastest-mode winner declared
+	EventToken  EventType = iota
+	EventFirst
+	EventFinish
+	EventError
+	EventWinner
 )
 
 // Coordinator manages the concurrent fan-out of prompts to multiple providers
@@ -91,10 +91,8 @@ func (c *Coordinator) run(parentCtx context.Context, prompt string, eventChan ch
 		winnerFound bool
 	)
 
-	// Shared token channel — all racers write here.
 	tokenChan := make(chan provider.Token, 512)
 
-	// Fan-out: launch a goroutine per entrant.
 	for _, entrant := range c.Entrants {
 		wg.Add(1)
 		go func(e Entrant) {
@@ -103,7 +101,6 @@ func (c *Coordinator) run(parentCtx context.Context, prompt string, eventChan ch
 
 			result, err := e.Provider.Stream(ctx, e.Model, prompt, tokenChan)
 			if err != nil && ctx.Err() == nil {
-				// Only report errors that aren't from cancellation.
 				eventChan <- RaceEvent{
 					Type:    EventError,
 					Entrant: label,
@@ -114,7 +111,6 @@ func (c *Coordinator) run(parentCtx context.Context, prompt string, eventChan ch
 			mu.Lock()
 			results = append(results, result)
 
-			// In fastest mode, the first to complete wins and cancels the rest.
 			if c.Mode == ModeFastest && !winnerFound && result.Err == nil {
 				winnerFound = true
 				eventChan <- RaceEvent{
@@ -134,8 +130,6 @@ func (c *Coordinator) run(parentCtx context.Context, prompt string, eventChan ch
 		}(entrant)
 	}
 
-	// Token router: forward tokens from the shared channel to the event channel.
-	// Also detect first-token events.
 	go func() {
 		for token := range tokenChan {
 			label := fmt.Sprintf("%s/%s", token.Provider, token.Model)
@@ -163,13 +157,10 @@ func (c *Coordinator) run(parentCtx context.Context, prompt string, eventChan ch
 		}
 	}()
 
-	// Wait for all racers to finish, then close the token channel.
 	wg.Wait()
 	close(tokenChan)
 
-	// Sort results by total time (fastest first).
 	sort.Slice(results, func(i, j int) bool {
-		// Errored results go to the back.
 		if results[i].Err != nil && results[j].Err == nil {
 			return false
 		}

@@ -2,12 +2,13 @@
 
 > Race your LLMs — fire one prompt at multiple AI models simultaneously and get the fastest response.
 
-RaceLLM is a high-concurrency Go CLI that sends your prompt to every configured model (OpenAI, Anthropic, Gemini, Ollama) at once, streams results in parallel, and declares a winner.
+RaceLLM is a high-concurrency Go CLI that sends your prompt to every configured model (OpenAI, Anthropic, Gemini, Ollama) at once, streams results in parallel, and renders a live BubbleTea dashboard showing each model racing to the finish line.
 
 ## Why?
 
 - **Fan-Out Concurrency:** 1 prompt → $N$ goroutines → $N$ API calls simultaneously.
 - **Streaming Aggregation:** Handles multiple incoming SSE token streams without blocking.
+- **Live TUI Dashboard:** BubbleTea progress bars update in real-time as tokens stream in; winner is highlighted with timing stats the moment it finishes.
 - **Graceful Cancellation:** `context.Context` kills losing connections the instant a winner is declared - saving API costs and CPU.
 
 ## Quick Start
@@ -106,7 +107,8 @@ User Prompt
 | **Provider Interface** | `internal/provider` | Common contract for all AI backends |
 | **OpenAI / Anthropic / Gemini / Ollama** | `internal/provider` | SSE stream parsing per API format |
 | **Coordinator** | `internal/coordinator` | Fan-out goroutines, channel aggregation, cancellation |
-| **Race Runner** | `internal/race` | Builds entrants from config, prints live events + scoreboard |
+| **Race Runner** | `internal/race` | Builds entrants from config, wires coordinator to TUI |
+| **TUI** | `internal/tui` | BubbleTea live dashboard — progress bars, winner highlight, final scoreboard |
 | **CLI** | `cmd` | Cobra-based command tree, flag parsing, signal handling |
 | **Config** | `internal/config` | YAML loading, env var resolution |
 
@@ -138,16 +140,12 @@ racellm/
 │   │   ├── anthropic.go             # Anthropic streaming
 │   │   ├── gemini.go                # Google Gemini streaming
 │   │   └── ollama.go                # Local Ollama streaming
-│   └── race/
-│       └── race.go                  # Race runner + result printing
+│   ├── race/
+│   │   └── race.go                  # Race runner — wires config → coordinator → TUI
+│   └── tui/
+│       └── tui.go                   # BubbleTea live dashboard
 └── racellm.example.yaml             # Example config
 ```
-
-## Development Milestones
-
-- [x] **Milestone 1 — The Basic Sprint:** Provider interface, concurrent requests, console output
-- [x] **Milestone 2 — The Kill Switch:** `context.WithCancel`, goroutine leak prevention
-- [ ] **Milestone 3 — The Live Dashboard:** BubbleTea TUI with horse-race visualizer
 
 ## Building
 

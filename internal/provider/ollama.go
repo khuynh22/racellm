@@ -87,7 +87,6 @@ func (o *Ollama) Stream(ctx context.Context, model, prompt string, tokenChan cha
 	tokenIndex := 0
 	scanner := bufio.NewScanner(resp.Body)
 
-	// Ollama streams newline-delimited JSON (not SSE).
 	for scanner.Scan() {
 		select {
 		case <-ctx.Done():

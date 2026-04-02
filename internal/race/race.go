@@ -6,9 +6,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/charmbracelet/glamour"
+	glamourstyles "github.com/charmbracelet/glamour/styles"
 	"github.com/khang/racellm/internal/config"
 	"github.com/khang/racellm/internal/coordinator"
 	"github.com/khang/racellm/internal/provider"
+	"github.com/khang/racellm/internal/tui"
 )
 
 // BuildEntrants reads the config and constructs all the provider+model entrants.
@@ -50,83 +53,56 @@ func BuildEntrants(cfg *config.Config) ([]coordinator.Entrant, error) {
 	return entrants, nil
 }
 
-// Run executes the race and prints results to stdout.
+// Run executes the race using the BubbleTea live dashboard.
 func Run(ctx context.Context, cfg *config.Config, prompt string, mode coordinator.RaceMode) error {
 	entrants, err := BuildEntrants(cfg)
 	if err != nil {
 		return err
 	}
 
-	fmt.Printf("🏁 Racing %d model(s) with prompt: %q\n\n", len(entrants), truncate(prompt, 80))
+	raceCtx, cancel := context.WithCancel(ctx)
+	defer cancel()
 
 	coord := coordinator.New(entrants, mode)
-	eventChan, resultsChan := coord.Race(ctx, prompt)
+	eventChan, resultsChan := coord.Race(raceCtx, prompt)
 
-	// Print live events.
-	for event := range eventChan {
-		switch event.Type {
-		case coordinator.EventFirst:
-			// TTFT is available on the final Result; this just signals the first token arrived.
-			fmt.Printf("⚡ [%s] First token!\n", event.Entrant)
-		case coordinator.EventToken:
-			// In a TUI this would update the progress bar. For now, dots.
-		case coordinator.EventFinish:
-			if event.Result != nil && event.Result.Err == nil {
-				fmt.Printf("✅ [%s] Finished in %s (%d tokens)\n",
-					event.Entrant,
-					coordinator.FormatDuration(event.Result.TotalTime),
-					event.Result.TokenCount)
-			}
-		case coordinator.EventError:
-			fmt.Printf("❌ [%s] Error: %v\n", event.Entrant, event.Err)
-		case coordinator.EventWinner:
-			fmt.Printf("\n🏆 WINNER: %s (completed in %s)\n\n",
-				event.Entrant,
-				coordinator.FormatDuration(event.Result.TotalTime))
-		}
+	results, err := tui.Run(cancel, entrants, prompt, mode, eventChan, resultsChan)
+	if err != nil {
+		return err
 	}
 
-	// Print final scoreboard.
-	results := <-resultsChan
-	fmt.Println("\n" + strings.Repeat("─", 60))
-	fmt.Println("📊 RACE RESULTS")
-	fmt.Println(strings.Repeat("─", 60))
-
-	for i, r := range results {
-		medal := " "
-		switch {
-		case i == 0 && r.Err == nil:
-			medal = "🥇"
-		case i == 1 && r.Err == nil:
-			medal = "🥈"
-		case i == 2 && r.Err == nil:
-			medal = "🥉"
-		}
-
-		if r.Err != nil {
-			fmt.Printf("%s %s/%s — ERROR: %v\n", medal, r.Provider, r.Model, r.Err)
-		} else {
-			fmt.Printf("%s %s/%s — %s (TTFT: %s, Tokens: %d)\n",
-				medal, r.Provider, r.Model,
-				coordinator.FormatDuration(r.TotalTime),
-				coordinator.FormatDuration(r.TTFT),
-				r.TokenCount)
-		}
-	}
-
-	// Print winner's full response.
 	if len(results) > 0 && results[0].Err == nil {
 		fmt.Println(strings.Repeat("─", 60))
-		fmt.Printf("\n💬 Best response (%s/%s):\n\n", results[0].Provider, results[0].Model)
-		fmt.Println(results[0].FullText)
+		fmt.Printf("\n💬 Fastest response (%s/%s):\n\n", results[0].Provider, results[0].Model)
+		fmt.Print(renderMarkdown(results[0].FullText))
 	}
 
 	return nil
 }
 
-func truncate(s string, maxLen int) string {
-	if len(s) <= maxLen {
-		return s
+// renderMarkdown renders markdown text using a customized glamour dark style
+// that replaces heading prefix markers (##, ###, …) with styled plain text.
+func renderMarkdown(text string) string {
+	style := glamourstyles.DarkStyleConfig
+	// Clear the ## / ### … prefixes so headings render as styled text without
+	// markdown syntax leaking through. They inherit bold+color from the base
+	// Heading style defined in the theme.
+	style.H2.Prefix = ""
+	style.H3.Prefix = ""
+	style.H4.Prefix = ""
+	style.H5.Prefix = ""
+	style.H6.Prefix = ""
+
+	r, err := glamour.NewTermRenderer(
+		glamour.WithStyles(style),
+		glamour.WithWordWrap(100),
+	)
+	if err != nil {
+		return text
 	}
-	return s[:maxLen-3] + "..."
+	rendered, err := r.Render(text)
+	if err != nil {
+		return text
+	}
+	return rendered
 }

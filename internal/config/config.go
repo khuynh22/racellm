@@ -13,7 +13,7 @@ import (
 
 // Config is the top-level configuration for RaceLLM.
 type Config struct {
-	DefaultMode string          `yaml:"default_mode"` // "fastest" or "all"
+	DefaultMode string          `yaml:"default_mode"`
 	Providers   ProvidersConfig `yaml:"providers"`
 }
 
@@ -52,7 +52,6 @@ func Load(path string) (*Config, error) {
 		return nil, fmt.Errorf("parse config %s: %w", path, err)
 	}
 
-	// Resolve API keys from env vars if prefixed with "$".
 	resolveEnvKeys(cfg)
 
 	return cfg, nil
@@ -64,14 +63,12 @@ func findConfigFile() string {
 		".racellm.yaml",
 	}
 
-	// Check current directory first.
 	for _, name := range candidates {
 		if _, err := os.Stat(name); err == nil {
 			return name
 		}
 	}
 
-	// Check home directory.
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return ""

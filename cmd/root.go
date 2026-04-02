@@ -92,7 +92,6 @@ func runRace(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("prompt cannot be empty")
 	}
 
-	// Determine race mode.
 	var mode coordinator.RaceMode
 	modeStr := cfg.DefaultMode
 	if modeFlag != "" {
@@ -107,7 +106,6 @@ func runRace(cmd *cobra.Command, args []string) error {
 		return fmt.Errorf("unknown mode %q; use 'fastest' or 'all'", modeStr)
 	}
 
-	// Set up context with OS signal handling for graceful shutdown.
 	ctx, stop := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer stop()
 
