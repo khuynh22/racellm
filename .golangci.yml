@@ -1,5 +1,6 @@
 # golangci-lint configuration for RaceLLM
 # Docs: https://golangci-lint.run/usage/configuration/
+version: "2"
 
 run:
   timeout: 5m
@@ -13,8 +14,7 @@ linters:
     # --- Correctness ---
     - errcheck       # Ensure errors are checked
     - govet          # Vet checks (shadowed vars, printf mismatches, etc.)
-    - staticcheck    # SA/S1/ST checks from staticcheck.io
-    - gosimple       # Suggestions for simplifying code
+    - staticcheck    # SA/S1/ST checks from staticcheck.io (includes gosimple)
     - ineffassign    # Detect unused assignments
     - unused         # Find unused code (vars, funcs, types)
 
@@ -35,8 +35,8 @@ linters:
     # --- Concurrency ---
     - gocritic       # A large set of code checks (incl. concurrency)
 
-linters-settings:
-  errcheck:
+  settings:
+    errcheck:
     # Treat errors returned from type assertions as errors.
     check-type-assertions: true
     check-blank: true
