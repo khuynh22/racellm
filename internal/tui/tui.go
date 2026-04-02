@@ -87,10 +87,12 @@ func New(
 	}
 }
 
+// Init implements tea.Model and returns the initial command to start listening for race events.
 func (m Model) Init() tea.Cmd {
 	return listenForEvent(m.eventChan)
 }
 
+// Update implements tea.Model and processes incoming messages to update race state.
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
@@ -163,12 +165,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			racer.totalTime = r.TotalTime
 			racer.ttft = r.TTFT
 			racer.tokenCount = r.TokenCount
-			if r.Err != nil {
+			switch {
+			case r.Err != nil:
 				racer.status = statusError
 				racer.err = r.Err
-			} else if i == 0 {
+			case i == 0:
 				racer.status = statusWinner
-			} else if racer.status != statusWinner {
+			case racer.status != statusWinner:
 				racer.status = statusFinished
 			}
 		}
@@ -183,6 +186,7 @@ const (
 	labelColWidth    = 26  // display width of the racer label column
 )
 
+// View implements tea.Model and renders the current race dashboard as a string.
 func (m Model) View() string {
 	var b strings.Builder
 
@@ -288,7 +292,7 @@ func listenForResults(c <-chan []provider.Result) tea.Cmd {
 }
 
 // Run starts the BubbleTea TUI, drives the race dashboard to completion, and
-// returns the sorted final results. cancel is called if the user quits early
+// returns the sorted final results. If the user quits early, cancel is called
 // so the coordinator goroutines stop cleanly.
 func Run(
 	cancel context.CancelFunc,
@@ -304,7 +308,11 @@ func Run(
 	if err != nil {
 		return nil, err
 	}
-	return fm.(Model).results, nil
+	m2, ok := fm.(Model)
+	if !ok {
+		return nil, fmt.Errorf("unexpected model type returned from BubbleTea")
+	}
+	return m2.results, nil
 }
 
 func truncate(s string, maxLen int) string {

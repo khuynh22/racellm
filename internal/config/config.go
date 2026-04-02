@@ -42,7 +42,7 @@ func Load(path string) (*Config, error) {
 		return nil, fmt.Errorf("no config file found; create one at ~/.racellm.yaml or pass --config")
 	}
 
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(path) // nolint:gosec // G304: config file path is provided by the user at runtime by design
 	if err != nil {
 		return nil, fmt.Errorf("read config %s: %w", path, err)
 	}

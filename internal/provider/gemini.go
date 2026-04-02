@@ -17,6 +17,7 @@ type Gemini struct {
 	Config ProviderConfig
 }
 
+// NewGemini creates a Gemini provider using the given config.
 func NewGemini(cfg ProviderConfig) *Gemini {
 	if cfg.BaseURL == "" {
 		cfg.BaseURL = "https://generativelanguage.googleapis.com/v1beta"
@@ -27,8 +28,10 @@ func NewGemini(cfg ProviderConfig) *Gemini {
 	return &Gemini{Config: cfg}
 }
 
+// Name returns the display name of the provider.
 func (g *Gemini) Name() string { return "Gemini" }
 
+// Models returns the list of supported model identifiers.
 func (g *Gemini) Models() []string {
 	return []string{"gemini-1.5-pro", "gemini-1.5-flash", "gemini-2.0-flash"}
 }
@@ -56,6 +59,7 @@ type geminiStreamResponse struct {
 	} `json:"candidates"`
 }
 
+// Stream sends prompt to the Gemini API and streams tokens onto tokenChan.
 func (g *Gemini) Stream(ctx context.Context, model, prompt string, tokenChan chan<- Token) (Result, error) {
 	startTime := time.Now()
 	result := Result{Provider: g.Name(), Model: model}
@@ -89,10 +93,10 @@ func (g *Gemini) Stream(ctx context.Context, model, prompt string, tokenChan cha
 		result.Err = fmt.Errorf("execute request: %w", err)
 		return result, result.Err
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint:errcheck // response body Close error is not actionable in a deferred call
 
 	if resp.StatusCode != http.StatusOK {
-		respBody, _ := io.ReadAll(io.LimitReader(resp.Body, 4096)) //nolint:errcheck // best-effort error body read
+		respBody, _ := io.ReadAll(io.LimitReader(resp.Body, 4096)) // nolint:errcheck // best-effort error body read
 		result.Err = fmt.Errorf("API error (status %d): %s", resp.StatusCode, string(respBody))
 		return result, result.Err
 	}

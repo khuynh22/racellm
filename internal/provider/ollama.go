@@ -17,6 +17,7 @@ type Ollama struct {
 	Config ProviderConfig
 }
 
+// NewOllama creates an Ollama provider using the given config.
 func NewOllama(cfg ProviderConfig) *Ollama {
 	if cfg.BaseURL == "" {
 		cfg.BaseURL = "http://localhost:11434"
@@ -27,8 +28,10 @@ func NewOllama(cfg ProviderConfig) *Ollama {
 	return &Ollama{Config: cfg}
 }
 
+// Name returns the display name of the provider.
 func (o *Ollama) Name() string { return "Ollama" }
 
+// Models returns the list of supported model identifiers.
 func (o *Ollama) Models() []string {
 	return []string{"llama3", "phi3", "mistral", "codellama"}
 }
@@ -44,6 +47,7 @@ type ollamaStreamChunk struct {
 	Done     bool   `json:"done"`
 }
 
+// Stream sends prompt to the Ollama API and streams tokens onto tokenChan.
 func (o *Ollama) Stream(ctx context.Context, model, prompt string, tokenChan chan<- Token) (Result, error) {
 	startTime := time.Now()
 	result := Result{Provider: o.Name(), Model: model}
@@ -75,14 +79,13 @@ func (o *Ollama) Stream(ctx context.Context, model, prompt string, tokenChan cha
 		result.Err = fmt.Errorf("execute request: %w", err)
 		return result, result.Err
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint:errcheck // response body Close error is not actionable in a deferred call
 
 	if resp.StatusCode != http.StatusOK {
-		respBody, _ := io.ReadAll(io.LimitReader(resp.Body, 4096)) //nolint:errcheck // best-effort error body read
+		respBody, _ := io.ReadAll(io.LimitReader(resp.Body, 4096)) // nolint:errcheck // best-effort error body read
 		result.Err = fmt.Errorf("API error (status %d): %s", resp.StatusCode, string(respBody))
 		return result, result.Err
 	}
-
 	var fullText strings.Builder
 	tokenIndex := 0
 	scanner := bufio.NewScanner(resp.Body)

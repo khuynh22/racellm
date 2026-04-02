@@ -75,6 +75,7 @@ func init() {
 	rootCmd.AddCommand(modelsCmd)
 }
 
+// Execute runs the root Cobra command and exits the process on error.
 func Execute() {
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)

@@ -17,6 +17,7 @@ type OpenAI struct {
 	Config ProviderConfig
 }
 
+// NewOpenAI creates an OpenAI provider using the given config.
 func NewOpenAI(cfg ProviderConfig) *OpenAI {
 	if cfg.BaseURL == "" {
 		cfg.BaseURL = "https://api.openai.com/v1"
@@ -27,8 +28,10 @@ func NewOpenAI(cfg ProviderConfig) *OpenAI {
 	return &OpenAI{Config: cfg}
 }
 
+// Name returns the display name of the provider.
 func (o *OpenAI) Name() string { return "OpenAI" }
 
+// Models returns the list of supported model identifiers.
 func (o *OpenAI) Models() []string {
 	return []string{"gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "gpt-3.5-turbo"}
 }
@@ -53,6 +56,7 @@ type openAIStreamChunk struct {
 	} `json:"choices"`
 }
 
+// Stream sends prompt to the OpenAI API and streams tokens onto tokenChan.
 func (o *OpenAI) Stream(ctx context.Context, model, prompt string, tokenChan chan<- Token) (Result, error) {
 	startTime := time.Now()
 	result := Result{Provider: o.Name(), Model: model}
@@ -85,10 +89,10 @@ func (o *OpenAI) Stream(ctx context.Context, model, prompt string, tokenChan cha
 		result.Err = fmt.Errorf("execute request: %w", err)
 		return result, result.Err
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint:errcheck // response body Close error is not actionable in a deferred call
 
 	if resp.StatusCode != http.StatusOK {
-		respBody, _ := io.ReadAll(io.LimitReader(resp.Body, 4096)) //nolint:errcheck // best-effort error body read
+		respBody, _ := io.ReadAll(io.LimitReader(resp.Body, 4096)) // nolint:errcheck // best-effort error body read
 		result.Err = fmt.Errorf("API error (status %d): %s", resp.StatusCode, string(respBody))
 		return result, result.Err
 	}

@@ -17,6 +17,7 @@ type Anthropic struct {
 	Config ProviderConfig
 }
 
+// NewAnthropic creates an Anthropic provider using the given config.
 func NewAnthropic(cfg ProviderConfig) *Anthropic {
 	if cfg.BaseURL == "" {
 		cfg.BaseURL = "https://api.anthropic.com/v1"
@@ -27,8 +28,10 @@ func NewAnthropic(cfg ProviderConfig) *Anthropic {
 	return &Anthropic{Config: cfg}
 }
 
+// Name returns the display name of the provider.
 func (a *Anthropic) Name() string { return "Anthropic" }
 
+// Models returns the list of supported model identifiers.
 func (a *Anthropic) Models() []string {
 	return []string{"claude-sonnet-4-20250514", "claude-3-5-haiku-20241022", "claude-3-opus-20240229"}
 }
@@ -53,6 +56,7 @@ type anthropicStreamEvent struct {
 	} `json:"delta,omitempty"`
 }
 
+// Stream sends prompt to the Anthropic API and streams tokens onto tokenChan.
 func (a *Anthropic) Stream(ctx context.Context, model, prompt string, tokenChan chan<- Token) (Result, error) {
 	startTime := time.Now()
 	result := Result{Provider: a.Name(), Model: model}
@@ -87,7 +91,7 @@ func (a *Anthropic) Stream(ctx context.Context, model, prompt string, tokenChan 
 		result.Err = fmt.Errorf("execute request: %w", err)
 		return result, result.Err
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() // nolint:errcheck // response body Close error is not actionable in a deferred call
 
 	if resp.StatusCode != http.StatusOK {
 		respBody, _ := io.ReadAll(io.LimitReader(resp.Body, 4096)) //nolint:errcheck // best-effort error body read

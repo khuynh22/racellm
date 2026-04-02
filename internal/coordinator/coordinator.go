@@ -36,10 +36,12 @@ type RaceEvent struct {
 	Err     error
 }
 
+// EventType classifies the kind of race event emitted on the event channel.
 type EventType int
 
+// Event type constants used in RaceEvent.Type.
 const (
-	EventToken  EventType = iota
+	EventToken EventType = iota
 	EventFirst
 	EventFinish
 	EventError
