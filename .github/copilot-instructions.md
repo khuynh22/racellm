@@ -39,7 +39,7 @@ prompt
 
 ## Key Conventions
 
-- **Go version**: `go 1.25` (see `go.mod`). Use standard library idioms.
+- **Go version**: `go 1.24` (see `go.mod`). Use standard library idioms.
 - **Error handling**: Wrap with `fmt.Errorf("context: %w", err)`. Never discard errors silently.
 - **Context**: Every `Stream` call receives a `context.Context`. Respect cancellation; return immediately when `ctx.Done()` is closed.
 - **Linter**: `golangci-lint` with the config in `.golangci.yml`. Run before committing. Inline `//nolint` directives must include a reason.
