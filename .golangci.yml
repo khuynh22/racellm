@@ -79,16 +79,16 @@ linters:
         # unnamedResult is a style preference; named returns add noise here.
         - unnamedResult
 
+  exclusions:
+    rules:
+      # Test files get relaxed rules.
+      - path: "_test\\.go"
+        linters:
+          - gosec
+          - errcheck
+          - gocritic
+
 issues:
   # Show all issues, not just 3 per linter.
   max-issues-per-linter: 0
   max-same-issues: 0
-
-exclusions:
-  rules:
-    # Test files get relaxed rules.
-    - path: "_test\\.go"
-      linters:
-        - gosec
-        - errcheck
-        - gocritic
