@@ -124,7 +124,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					r.ttft = e.Result.TTFT
 					r.tokenCount = e.Result.TokenCount
 					switch {
-					case e.Result.Cancelled:
+					case e.Result.Canceled:
 						r.status = statusCancelled
 					case e.Result.Err != nil:
 						r.status = statusError
@@ -171,7 +171,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			racer.ttft = r.TTFT
 			racer.tokenCount = r.TokenCount
 			switch {
-			case r.Cancelled:
+			case r.Canceled:
 				racer.status = statusCancelled
 			case r.Err != nil:
 				racer.status = statusError
@@ -262,7 +262,7 @@ func (m Model) renderRow(r *racerState) string {
 		info = "ERR: " + errStr
 	case statusCancelled:
 		icon = "◼"
-		info = "CANCELLED"
+		info = "CANCELED"
 	}
 
 	var style lipgloss.Style

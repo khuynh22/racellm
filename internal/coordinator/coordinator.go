@@ -130,7 +130,7 @@ func (c *Coordinator) run(parentCtx context.Context, prompt string, eventChan ch
 			// Distinguish context cancellation (caused by another racer winning)
 			// from a genuine API/network error.
 			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
-				result.Cancelled = true
+				result.Canceled = true
 				result.Err = nil
 				err = nil
 			}
@@ -156,7 +156,7 @@ func (c *Coordinator) run(parentCtx context.Context, prompt string, eventChan ch
 
 			// For fastest mode: block until every provider has warmed up, then
 			// the first one to have already completed claims the win.
-			if c.Mode == ModeFastest && result.Err == nil && !result.Cancelled {
+			if c.Mode == ModeFastest && result.Err == nil && !result.Canceled {
 				<-firstReadyCh
 				mu.Lock()
 				alreadyWon := winnerFound
@@ -176,7 +176,10 @@ func (c *Coordinator) run(parentCtx context.Context, prompt string, eventChan ch
 		}(entrant)
 	}
 
+	var routerWg sync.WaitGroup
+	routerWg.Add(1)
 	go func() {
+		defer routerWg.Done()
 		for token := range tokenChan {
 			label := fmt.Sprintf("%s/%s", token.Provider, token.Model)
 
@@ -203,6 +206,7 @@ func (c *Coordinator) run(parentCtx context.Context, prompt string, eventChan ch
 
 	wg.Wait()
 	close(tokenChan)
+	routerWg.Wait() // drain all buffered tokens before closing eventChan
 
 	// Adjust TotalTime for a fair comparison: measure each provider's elapsed
 	// time from when the last provider produced its first token (raceStartTime)
@@ -231,7 +235,7 @@ func (c *Coordinator) run(parentCtx context.Context, prompt string, eventChan ch
 	mu.Unlock()
 
 	sort.Slice(results, func(i, j int) bool {
-		hasErr := func(r provider.Result) bool { return r.Err != nil || r.Cancelled }
+		hasErr := func(r provider.Result) bool { return r.Err != nil || r.Canceled }
 		if hasErr(results[i]) != hasErr(results[j]) {
 			return !hasErr(results[i])
 		}
