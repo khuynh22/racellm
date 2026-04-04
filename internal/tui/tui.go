@@ -15,12 +15,13 @@ import (
 )
 
 var (
-	headerStyle  = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("205"))
-	dimStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
-	runningStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("39"))
-	winnerStyle  = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("220"))
-	doneStyle    = lipgloss.NewStyle().Foreground(lipgloss.Color("70"))
-	errorStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("196"))
+	headerStyle    = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("205"))
+	dimStyle       = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
+	runningStyle   = lipgloss.NewStyle().Foreground(lipgloss.Color("39"))
+	winnerStyle    = lipgloss.NewStyle().Bold(true).Foreground(lipgloss.Color("220"))
+	doneStyle      = lipgloss.NewStyle().Foreground(lipgloss.Color("70"))
+	errorStyle     = lipgloss.NewStyle().Foreground(lipgloss.Color("196"))
+	cancelledStyle = lipgloss.NewStyle().Foreground(lipgloss.Color("240"))
 )
 
 type raceEventMsg struct{ e coordinator.RaceEvent }
@@ -30,10 +31,11 @@ type resultsMsg struct{ results []provider.Result }
 type racerStatus int
 
 const (
-	statusRunning  racerStatus = iota
-	statusFinished             // completed but not the winner
-	statusWinner               // first to finish (or fastest overall)
-	statusError                // encountered an error
+	statusRunning   racerStatus = iota
+	statusFinished              // completed but not the winner
+	statusWinner                // first to finish (or fastest overall)
+	statusError                 // encountered an error
+	statusCancelled             // stopped because another racer won
 )
 
 type racerState struct {
@@ -121,10 +123,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					r.totalTime = e.Result.TotalTime
 					r.ttft = e.Result.TTFT
 					r.tokenCount = e.Result.TokenCount
-					if e.Result.Err != nil {
+					switch {
+					case e.Result.Cancelled:
+						r.status = statusCancelled
+					case e.Result.Err != nil:
 						r.status = statusError
 						r.err = e.Result.Err
-					} else if r.status != statusWinner {
+					case r.status != statusWinner:
 						r.status = statusFinished
 					}
 				}
@@ -166,6 +171,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			racer.ttft = r.TTFT
 			racer.tokenCount = r.TokenCount
 			switch {
+			case r.Cancelled:
+				racer.status = statusCancelled
 			case r.Err != nil:
 				racer.status = statusError
 				racer.err = r.Err
@@ -253,6 +260,9 @@ func (m Model) renderRow(r *racerState) string {
 			}
 		}
 		info = "ERR: " + errStr
+	case statusCancelled:
+		icon = "◼"
+		info = "CANCELLED"
 	}
 
 	var style lipgloss.Style
@@ -265,6 +275,8 @@ func (m Model) renderRow(r *racerState) string {
 		style = doneStyle
 	case statusError:
 		style = errorStyle
+	case statusCancelled:
+		style = cancelledStyle
 	}
 
 	labelStr := lipgloss.NewStyle().

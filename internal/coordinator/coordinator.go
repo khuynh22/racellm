@@ -3,6 +3,7 @@ package coordinator
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sort"
 	"sync"
@@ -89,9 +90,28 @@ func (c *Coordinator) run(parentCtx context.Context, prompt string, eventChan ch
 		wg          sync.WaitGroup
 		mu          sync.Mutex
 		results     []provider.Result
-		firstTokens = make(map[string]bool) // track which entrants got their first token
+		barrierSeen = make(map[string]bool) // per-entrant: first-token or error checked in
 		winnerFound bool
 	)
+
+	// Fair-start barrier: closed once every entrant has either produced its
+	// first token or failed. ModeFastest winner selection is gated on this so
+	// that API/model spin-up time is excluded from the race.
+	firstReadyCh := make(chan struct{})
+	barrierLeft := len(c.Entrants)
+	var barrierOnce sync.Once
+
+	barrierCheckin := func(label string) {
+		mu.Lock()
+		if !barrierSeen[label] {
+			barrierSeen[label] = true
+			barrierLeft--
+			if barrierLeft == 0 {
+				barrierOnce.Do(func() { close(firstReadyCh) })
+			}
+		}
+		mu.Unlock()
+	}
 
 	tokenChan := make(chan provider.Token, 512)
 
@@ -102,7 +122,20 @@ func (c *Coordinator) run(parentCtx context.Context, prompt string, eventChan ch
 			label := fmt.Sprintf("%s/%s", e.Provider.Name(), e.Model)
 
 			result, err := e.Provider.Stream(ctx, e.Model, prompt, tokenChan)
-			if err != nil && ctx.Err() == nil {
+
+			// If this provider never produced a token (errored before streaming
+			// started), release its barrier slot so the countdown can complete.
+			barrierCheckin(label)
+
+			// Distinguish context cancellation (caused by another racer winning)
+			// from a genuine API/network error.
+			if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+				result.Cancelled = true
+				result.Err = nil
+				err = nil
+			}
+
+			if err != nil {
 				eventChan <- RaceEvent{
 					Type:    EventError,
 					Entrant: label,
@@ -112,22 +145,33 @@ func (c *Coordinator) run(parentCtx context.Context, prompt string, eventChan ch
 
 			mu.Lock()
 			results = append(results, result)
-
-			if c.Mode == ModeFastest && !winnerFound && result.Err == nil {
-				winnerFound = true
-				eventChan <- RaceEvent{
-					Type:    EventWinner,
-					Entrant: label,
-					Result:  &result,
-				}
-				cancel()
-			}
 			mu.Unlock()
 
+			// Emit finish immediately so the TUI can update timing.
 			eventChan <- RaceEvent{
 				Type:    EventFinish,
 				Entrant: label,
 				Result:  &result,
+			}
+
+			// For fastest mode: block until every provider has warmed up, then
+			// the first one to have already completed claims the win.
+			if c.Mode == ModeFastest && result.Err == nil && !result.Cancelled {
+				<-firstReadyCh
+				mu.Lock()
+				alreadyWon := winnerFound
+				if !winnerFound {
+					winnerFound = true
+				}
+				mu.Unlock()
+				if !alreadyWon {
+					cancel()
+					eventChan <- RaceEvent{
+						Type:    EventWinner,
+						Entrant: label,
+						Result:  &result,
+					}
+				}
 			}
 		}(entrant)
 	}
@@ -137,13 +181,11 @@ func (c *Coordinator) run(parentCtx context.Context, prompt string, eventChan ch
 			label := fmt.Sprintf("%s/%s", token.Provider, token.Model)
 
 			mu.Lock()
-			isFirst := !firstTokens[label]
-			if isFirst {
-				firstTokens[label] = true
-			}
+			isFirst := !barrierSeen[label]
 			mu.Unlock()
 
 			if isFirst {
+				barrierCheckin(label)
 				eventChan <- RaceEvent{
 					Type:    EventFirst,
 					Token:   &token,
@@ -162,12 +204,36 @@ func (c *Coordinator) run(parentCtx context.Context, prompt string, eventChan ch
 	wg.Wait()
 	close(tokenChan)
 
-	sort.Slice(results, func(i, j int) bool {
-		if results[i].Err != nil && results[j].Err == nil {
-			return false
+	// Adjust TotalTime for a fair comparison: measure each provider's elapsed
+	// time from when the last provider produced its first token (raceStartTime)
+	// so that spin-up latency is excluded from the race ranking.
+	mu.Lock()
+	var raceStartTime time.Time
+	for i := range results {
+		if !results[i].FirstTokenAt.IsZero() && results[i].FirstTokenAt.After(raceStartTime) {
+			raceStartTime = results[i].FirstTokenAt
 		}
-		if results[i].Err == nil && results[j].Err != nil {
-			return true
+	}
+	if !raceStartTime.IsZero() {
+		for i := range results {
+			if !results[i].FirstTokenAt.IsZero() {
+				// completionTime = requestStart + TotalTime
+				//                = (FirstTokenAt − TTFT) + TotalTime
+				completionTime := results[i].FirstTokenAt.Add(results[i].TotalTime - results[i].TTFT)
+				adjusted := completionTime.Sub(raceStartTime)
+				if adjusted < 0 {
+					adjusted = 0
+				}
+				results[i].TotalTime = adjusted
+			}
+		}
+	}
+	mu.Unlock()
+
+	sort.Slice(results, func(i, j int) bool {
+		hasErr := func(r provider.Result) bool { return r.Err != nil || r.Cancelled }
+		if hasErr(results[i]) != hasErr(results[j]) {
+			return !hasErr(results[i])
 		}
 		return results[i].TotalTime < results[j].TotalTime
 	})

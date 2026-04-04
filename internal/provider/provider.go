@@ -24,6 +24,9 @@ type Result struct {
 	TTFT         time.Duration
 	TotalTime    time.Duration
 	Err          error
+	// Cancelled is true when the provider was stopped because another racer
+	// won in ModeFastest; it is distinct from a genuine API error.
+	Cancelled bool
 }
 
 // Provider is the interface that all AI model backends must implement.
