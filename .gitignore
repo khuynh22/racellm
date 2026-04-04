@@ -17,3 +17,6 @@ racellm.yaml
 # Editor / OS
 .DS_Store
 Thumbs.db
+
+# Test Coverage
+coverage

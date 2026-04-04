@@ -153,6 +153,23 @@ racellm/
 go build -o racellm .
 ```
 
+## Cost & Rate Limits
+
+Each race fires **N simultaneous API calls** — one per configured model. If you race 5 models, you're billed for 5 separate completions. In `fastest` mode the losers are canceled as soon as a winner finishes, so you only pay for the tokens streamed before cancellation.
+
+Rate limits also apply per-model. If you race several models from the same provider, each counts separately toward that provider's quota.
+
+## Troubleshooting
+
+| Symptom | Likely Cause | Fix |
+|---|---|---|
+| `api_key is not set` | Env var not exported | Run `export OPENAI_API_KEY=sk-...` before racellm |
+| `no providers enabled` | All `enabled: false` | Set `enabled: true` for at least one provider |
+| Provider shows `ERR: API error (status 401)` | Wrong or expired API key | Regenerate and update your config / env var |
+| Provider shows `ERR: API error (status 429)` | Rate limit hit | Wait and retry, or reduce concurrent models |
+| Ollama times out | Model not pulled locally | Run `ollama pull <model>` first |
+| TUI flickers | Terminal width too narrow | Widen your terminal to ≥ 100 columns |
+
 ## License
 
 MIT
