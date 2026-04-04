@@ -54,6 +54,10 @@ func Load(path string) (*Config, error) {
 
 	resolveEnvKeys(cfg)
 
+	if err := validate(cfg); err != nil {
+		return nil, err
+	}
+
 	return cfg, nil
 }
 
@@ -96,4 +100,32 @@ func resolveEnvKeys(cfg *Config) {
 	resolve(cfg.Providers.Anthropic)
 	resolve(cfg.Providers.Gemini)
 	resolve(cfg.Providers.Ollama)
+}
+
+// validate checks that every enabled provider that requires an API key has one set.
+func validate(cfg *Config) error {
+	type check struct {
+		name  string
+		entry *ProviderEntry
+		// needsKey is false for providers that work without an API key (e.g. Ollama)
+		needsKey bool
+	}
+	checks := []check{
+		{"openai", cfg.Providers.OpenAI, true},
+		{"anthropic", cfg.Providers.Anthropic, true},
+		{"gemini", cfg.Providers.Gemini, true},
+		{"ollama", cfg.Providers.Ollama, false},
+	}
+	for _, c := range checks {
+		if c.entry == nil || !c.entry.Enabled {
+			continue
+		}
+		if c.needsKey && c.entry.APIKey == "" {
+			return fmt.Errorf("%s is enabled but api_key is not set (set the env var or add it to your config)", c.name)
+		}
+		if len(c.entry.Models) == 0 {
+			return fmt.Errorf("%s is enabled but has no models configured", c.name)
+		}
+	}
+	return nil
 }

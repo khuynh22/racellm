@@ -128,6 +128,7 @@ func (g *Gemini) Stream(ctx context.Context, model, prompt string, tokenChan cha
 			continue
 		}
 
+		streamDone := false
 		for _, candidate := range chunk.Candidates {
 			for _, part := range candidate.Content.Parts {
 				text := part.Text
@@ -158,7 +159,21 @@ func (g *Gemini) Stream(ctx context.Context, model, prompt string, tokenChan cha
 					return result, result.Err
 				}
 			}
+			if candidate.FinishReason != "" {
+				streamDone = true
+			}
 		}
+		if streamDone {
+			break
+		}
+	}
+
+	if err := scanner.Err(); err != nil {
+		result.Err = fmt.Errorf("read response stream: %w", err)
+		result.FullText = fullText.String()
+		result.TokenCount = tokenIndex
+		result.TotalTime = time.Since(startTime)
+		return result, result.Err
 	}
 
 	result.FullText = fullText.String()

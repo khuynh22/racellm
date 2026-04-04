@@ -144,6 +144,14 @@ func (o *Ollama) Stream(ctx context.Context, model, prompt string, tokenChan cha
 		}
 	}
 
+	if err := scanner.Err(); err != nil {
+		result.Err = fmt.Errorf("read response stream: %w", err)
+		result.FullText = fullText.String()
+		result.TokenCount = tokenIndex
+		result.TotalTime = time.Since(startTime)
+		return result, result.Err
+	}
+
 	result.FullText = fullText.String()
 	result.TokenCount = tokenIndex
 	result.TotalTime = time.Since(startTime)
