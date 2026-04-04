@@ -121,32 +121,6 @@ User Prompt
 - **`sync.Mutex`** — protect shared result slice and winner flag
 - **`signal.NotifyContext`** — graceful OS signal handling (Ctrl+C)
 
-## Project Structure
-
-```
-racellm/
-├── main.go                          # Entry point
-├── go.mod
-├── cmd/
-│   └── root.go                      # Cobra CLI commands
-├── internal/
-│   ├── config/
-│   │   └── config.go                # YAML config + env var resolution
-│   ├── coordinator/
-│   │   └── coordinator.go           # Fan-out, channels, race logic
-│   ├── provider/
-│   │   ├── provider.go              # Provider interface + types
-│   │   ├── openai.go                # OpenAI streaming
-│   │   ├── anthropic.go             # Anthropic streaming
-│   │   ├── gemini.go                # Google Gemini streaming
-│   │   └── ollama.go                # Local Ollama streaming
-│   ├── race/
-│   │   └── race.go                  # Race runner — wires config → coordinator → TUI
-│   └── tui/
-│       └── tui.go                   # BubbleTea live dashboard
-└── racellm.example.yaml             # Example config
-```
-
 ## Building
 
 ```bash
