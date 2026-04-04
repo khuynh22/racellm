@@ -19,8 +19,8 @@ type mockProvider struct {
 	err    error         // if non-nil, returned immediately with no tokens
 }
 
-func (m *mockProvider) Name() string        { return m.name }
-func (m *mockProvider) Models() []string    { return []string{"mock-model"} }
+func (m *mockProvider) Name() string     { return m.name }
+func (m *mockProvider) Models() []string { return []string{"mock-model"} }
 func (m *mockProvider) Stream(ctx context.Context, model, _ string, tokenChan chan<- provider.Token) (provider.Result, error) {
 	result := provider.Result{Provider: m.name, Model: model}
 	startTime := time.Now()
