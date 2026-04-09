@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "If you use RaceLLM in your research or work, please cite it using this metadata."
+type: software
+title: RaceLLM
+abstract: >
+  RaceLLM is a Go CLI that fans out a single prompt to multiple LLM providers
+  simultaneously (OpenAI, Anthropic, Gemini, Ollama), streams all responses in
+  parallel, and surfaces timing results through a live BubbleTea TUI dashboard.
+  It supports two race modes: "all" (wait for every provider) and "fastest"
+  (cancel the rest once the first completes).
+authors:
+  - alias: Tim Huynh
+    name: "Khang Nguyen Huynh"
+repository-code: "https://github.com/khang/racellm"
+url: "https://github.com/khang/racellm"
+license: MIT
+keywords:
+  - llm
+  - ai
+  - benchmarking
+  - cli
+  - golang
+  - tui
+  - openai
+  - anthropic
+  - gemini
+  - ollama
+  - streaming
+  - concurrency

@@ -1,21 +1,44 @@
 # RaceLLM 🏁
 
-> Race your LLMs — fire one prompt at multiple AI models simultaneously and get the fastest response.
+[![Go Version](https://img.shields.io/badge/go-1.25-00ADD8?logo=go)](https://go.dev/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Go Report Card](https://goreportcard.com/badge/github.com/khang/racellm)](https://goreportcard.com/report/github.com/khang/racellm)
+[![Go Reference](https://pkg.go.dev/badge/github.com/khang/racellm.svg)](https://pkg.go.dev/github.com/khang/racellm)
+
+> Race your LLMs — fire one prompt at multiple AI models simultaneously and see who finishes first.
 
 RaceLLM is a high-concurrency Go CLI that sends your prompt to every configured model (OpenAI, Anthropic, Gemini, Ollama) at once, streams results in parallel, and renders a live BubbleTea dashboard showing each model racing to the finish line.
 
+<!-- Add a demo GIF here — record with `vhs demo.tape` (see docs/demo.tape) -->
+<!-- ![RaceLLM demo](docs/demo.gif) -->
+
 ## Why?
 
-- **Fan-Out Concurrency:** 1 prompt → $N$ goroutines → $N$ API calls simultaneously.
+- **Fan-Out Concurrency:** 1 prompt → N goroutines → N API calls simultaneously.
 - **Streaming Aggregation:** Handles multiple incoming SSE token streams without blocking.
 - **Live TUI Dashboard:** BubbleTea progress bars update in real-time as tokens stream in; winner is highlighted with timing stats the moment it finishes.
-- **Graceful Cancellation:** `context.Context` kills losing connections the instant a winner is declared - saving API costs and CPU.
+- **Graceful Cancellation:** `context.Context` kills losing connections the instant a winner is declared — saving API costs and CPU.
+- **Works locally too:** Ollama support means you can race cloud models against local ones for free.
+
+## Use Cases
+
+| Who | What they do with RaceLLM |
+|---|---|
+| **Prompt engineers** | Validate a prompt across GPT-4o, Claude, and Gemini simultaneously before committing to one |
+| **Cost-conscious teams** | Use `--mode fastest` to only pay for tokens up to the first complete response |
+| **LLM researchers** | Race the same prompt across frontier models and record latency data empirically |
+| **Developers** | Find which model is fastest for your specific workload before hard-coding a provider |
+| **Go developers** | Study a real-world BubbleTea TUI + concurrent SSE fan-in architecture |
 
 ## Quick Start
 
 ```bash
 # 1. Install
 go install github.com/khang/racellm@latest
+
+# Or clone and build from source
+git clone https://github.com/khang/racellm.git
+cd racellm && go build -o racellm .
 
 # 2. Configure
 cp racellm.example.yaml ~/.racellm.yaml
@@ -147,3 +170,30 @@ Rate limits also apply per-model. If you race several models from the same provi
 ## License
 
 MIT
+
+## Contributing
+
+Contributions are welcome! Here's how to get started:
+
+1. Fork the repo and create a feature branch: `git checkout -b feat/my-feature`
+2. Run tests before and after your change: `go test -race ./...`
+3. Keep code `gofmt`/`goimports` clean: `goimports -w .`
+4. Run the linter: `golangci-lint run`
+5. Open a PR describing what you changed and why.
+
+**Adding a new provider?** See the [Adding a New Provider](https://github.com/khang/racellm/blob/main/.github/copilot-instructions.md#adding-a-new-provider) section in the architecture notes.
+
+## Citation
+
+If you use RaceLLM in research or a project, please cite it:
+
+```bibtex
+@software{racellm,
+  author  = {khang},
+  title   = {RaceLLM: Race your LLMs from the terminal},
+  url     = {https://github.com/khang/racellm},
+  license = {MIT},
+}
+```
+
+GitHub also surfaces a **"Cite this repository"** button (top-right of the repo page) powered by the [`CITATION.cff`](CITATION.cff) file in this repo.
