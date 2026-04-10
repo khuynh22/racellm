@@ -10,8 +10,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/khang/racellm/internal/coordinator"
-	"github.com/khang/racellm/internal/provider"
+	"github.com/khuynh22/racellm/internal/coordinator"
+	"github.com/khuynh22/racellm/internal/provider"
 )
 
 var (

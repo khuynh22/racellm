@@ -8,10 +8,10 @@ import (
 
 	"github.com/charmbracelet/glamour"
 	glamourstyles "github.com/charmbracelet/glamour/styles"
-	"github.com/khang/racellm/internal/config"
-	"github.com/khang/racellm/internal/coordinator"
-	"github.com/khang/racellm/internal/provider"
-	"github.com/khang/racellm/internal/tui"
+	"github.com/khuynh22/racellm/internal/config"
+	"github.com/khuynh22/racellm/internal/coordinator"
+	"github.com/khuynh22/racellm/internal/provider"
+	"github.com/khuynh22/racellm/internal/tui"
 )
 
 // BuildEntrants reads the config and constructs all the provider+model entrants.

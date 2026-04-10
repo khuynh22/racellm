@@ -1,4 +1,4 @@
-module github.com/khang/racellm
+module github.com/khuynh22/racellm
 
 go 1.25.0
 

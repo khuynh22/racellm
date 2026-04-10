@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/khang/racellm/internal/provider"
+	"github.com/khuynh22/racellm/internal/provider"
 )
 
 // RaceMode determines how the race behaves once a winner is found.

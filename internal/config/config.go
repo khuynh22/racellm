@@ -8,7 +8,7 @@ import (
 
 	"gopkg.in/yaml.v3"
 
-	"github.com/khang/racellm/internal/provider"
+	"github.com/khuynh22/racellm/internal/provider"
 )
 
 // Config is the top-level configuration for RaceLLM.

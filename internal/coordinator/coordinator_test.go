@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/khang/racellm/internal/provider"
+	"github.com/khuynh22/racellm/internal/provider"
 )
 
 // mockProvider is a controllable Provider for testing.

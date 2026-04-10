@@ -11,8 +11,8 @@ abstract: >
 authors:
   - alias: Tim Huynh
     name: "Khang Nguyen Huynh"
-repository-code: "https://github.com/khang/racellm"
-url: "https://github.com/khang/racellm"
+repository-code: "https://github.com/khuynh22/racellm"
+url: "https://github.com/khuynh22/racellm"
 license: MIT
 keywords:
   - llm

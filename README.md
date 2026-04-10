@@ -2,15 +2,14 @@
 
 [![Go Version](https://img.shields.io/badge/go-1.25-00ADD8?logo=go)](https://go.dev/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Go Report Card](https://goreportcard.com/badge/github.com/khang/racellm)](https://goreportcard.com/report/github.com/khang/racellm)
-[![Go Reference](https://pkg.go.dev/badge/github.com/khang/racellm.svg)](https://pkg.go.dev/github.com/khang/racellm)
+[![Go Report Card](https://goreportcard.com/badge/github.com/khuynh22/racellm)](https://goreportcard.com/report/github.com/khuynh22/racellm)
+[![Go Reference](https://pkg.go.dev/badge/github.com/khuynh22/racellm.svg)](https://pkg.go.dev/github.com/khuynh22/racellm)
 
 > Race your LLMs — fire one prompt at multiple AI models simultaneously and see who finishes first.
 
 RaceLLM is a high-concurrency Go CLI that sends your prompt to every configured model (OpenAI, Anthropic, Gemini, Ollama) at once, streams results in parallel, and renders a live BubbleTea dashboard showing each model racing to the finish line.
 
-<!-- Add a demo GIF here — record with `vhs demo.tape` (see docs/demo.tape) -->
-<!-- ![RaceLLM demo](docs/demo.gif) -->
+![RaceLLM demo](docs/demo.gif)
 
 ## Why?
 
@@ -34,10 +33,10 @@ RaceLLM is a high-concurrency Go CLI that sends your prompt to every configured 
 
 ```bash
 # 1. Install
-go install github.com/khang/racellm@latest
+go install github.com/khuynh22/racellm@latest
 
 # Or clone and build from source
-git clone https://github.com/khang/racellm.git
+git clone https://github.com/khuynh22/racellm.git
 cd racellm && go build -o racellm .
 
 # 2. Configure
@@ -102,27 +101,6 @@ providers:
 
 API keys prefixed with `$` are automatically resolved from environment variables.
 
-## Architecture
-
-```
-User Prompt
-     │
-     ▼
-┌──────────┐      ┌───────────────────────────────────────────┐
-│ CLI      │────▶│  Coordinator                               │
-│ (Cobra)  │      │                                           │
-└──────────┘      │  ┌─── go OpenAI.Stream() ──▶ tokenChan    │
-                  │  ├─── go Anthropic.Stream() ──▶ tokenChan │
-                  │  ├─── go Gemini.Stream() ──▶ tokenChan    │
-                  │  └─── go Ollama.Stream() ──▶ tokenChan    │
-                  │                                           │
-                  │  ctx.Cancel() ◀── winner detected         │
-                  └───────────────────────────────────────────┘
-                           │
-                           ▼
-                    Sorted Results + Scoreboard
-```
-
 ### Key Components
 
 | Component | Package | Responsibility |
@@ -181,7 +159,7 @@ Contributions are welcome! Here's how to get started:
 4. Run the linter: `golangci-lint run`
 5. Open a PR describing what you changed and why.
 
-**Adding a new provider?** See the [Adding a New Provider](https://github.com/khang/racellm/blob/main/.github/copilot-instructions.md#adding-a-new-provider) section in the architecture notes.
+**Adding a new provider?** See the [Adding a New Provider](https://github.com/khuynh22/racellm/blob/main/.github/copilot-instructions.md#adding-a-new-provider) section in the architecture notes.
 
 ## Citation
 
@@ -189,9 +167,9 @@ If you use RaceLLM in research or a project, please cite it:
 
 ```bibtex
 @software{racellm,
-  author  = {khang},
+  author  = {Khang Nguyen Huynh},
   title   = {RaceLLM: Race your LLMs from the terminal},
-  url     = {https://github.com/khang/racellm},
+  url     = {https://github.com/khuynh22/racellm},
   license = {MIT},
 }
 ```

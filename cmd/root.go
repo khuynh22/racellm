@@ -11,9 +11,9 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/khang/racellm/internal/config"
-	"github.com/khang/racellm/internal/coordinator"
-	"github.com/khang/racellm/internal/race"
+	"github.com/khuynh22/racellm/internal/config"
+	"github.com/khuynh22/racellm/internal/coordinator"
+	"github.com/khuynh22/racellm/internal/race"
 )
 
 var (
